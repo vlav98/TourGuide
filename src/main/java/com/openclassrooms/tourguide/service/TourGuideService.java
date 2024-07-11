@@ -33,6 +33,7 @@ public class TourGuideService {
 	public final Tracker tracker;
 	boolean testMode = true;
 	private final RewardCentral rewardCentral = new RewardCentral();
+	private final static int ATTRACTION_NUMBER_LIMIT = 5; // We limit the number of closest attractions to 5.
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -111,7 +112,7 @@ public class TourGuideService {
 					nearbyAttractionDTO.setRewardPoints(rewardCentral.getAttractionRewardPoints(attraction.attractionId, currentUser.getUserId()));
 					return nearbyAttractionDTO;
 				}).sorted(Comparator.comparingDouble(NearbyAttractionDTO::getDistanceInMiles))
-				.limit(5)
+				.limit(ATTRACTION_NUMBER_LIMIT)
 				.collect(Collectors.toList());
 	}
 
