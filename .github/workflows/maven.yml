@@ -28,9 +28,9 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Install Maven dependencies
-      run: mvn install:install-file -Dfile="./libs/gpsUtil.jar" -DgroupId=gpsUtil -DartifactId=gpsUtil -Dversion="1.0.0" -Dpackaging=jar
-          mvn install:install-file -Dfile="./libs/tripPricer.jar" -DgroupId=tripPricer -DartifactId=tripPricer -Dversion="1.0.0" -Dpackaging=jar
-          mvn install:install-file -Dfile="./libs/rewardCentral.jar" -DgroupId=rewardCentral -DartifactId=rewardCentral -Dversion="1.0.0" -Dpackaging=jar
+      run: mvn install:install-file -Dfile=./libs/gpsUtil.jar -DgroupId=gpsUtil -DartifactId=gpsUtil -Dversion="1.0.0" -Dpackaging=jar
+          mvn install:install-file -Dfile=./libs/tripPricer.jar -DgroupId=tripPricer -DartifactId=tripPricer -Dversion="1.0.0" -Dpackaging=jar
+          mvn install:install-file -Dfile=./libs/rewardCentral.jar -DgroupId=rewardCentral -DartifactId=rewardCentral -Dversion="1.0.0" -Dpackaging=jar
     
     - name: Compile project
       run: mvn -f ./pom.xml clean compile
