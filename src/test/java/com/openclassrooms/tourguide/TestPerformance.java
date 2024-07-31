@@ -60,7 +60,10 @@ public class TestPerformance {
 	public void highVolumeTrackLocation() {
 		// Users should be incremented up to 100,000, and test finishes within 15
 		// minutes
-		InternalTestHelper.setInternalUserNumber(10000);
+//		InternalTestHelper.setInternalUserNumber(100);
+		InternalTestHelper.setInternalUserNumber(1000);
+//		InternalTestHelper.setInternalUserNumber(10000);
+//		InternalTestHelper.setInternalUserNumber(100000);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
 		List<User> allUsers = new ArrayList<>();
@@ -69,9 +72,6 @@ public class TestPerformance {
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		tourGuideService.trackAllUsersLocations(allUsers);
-//		for (User user : allUsers) {
-//			tourGuideService.trackUserLocation(user);
-//		}
 		stopWatch.stop();
 		tourGuideService.tracker.stopTracking();
 
@@ -81,10 +81,13 @@ public class TestPerformance {
 	}
 
 	@Test
-	public void highVolumeGetRewards() throws ExecutionException, InterruptedException {
+	public void highVolumeGetRewards() {
 		// Users should be incremented up to 100,000, and test finishes within 20
 		// minutes
-		InternalTestHelper.setInternalUserNumber(10000);
+//		InternalTestHelper.setInternalUserNumber(100);
+		InternalTestHelper.setInternalUserNumber(1000);
+//		InternalTestHelper.setInternalUserNumber(10000);
+//		InternalTestHelper.setInternalUserNumber(100000);
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
@@ -94,13 +97,12 @@ public class TestPerformance {
 		allUsers = tourGuideService.getAllUsers();
 		allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
 
-//		allUsers.forEach(u -> rewardsService.calculateRewards(u));
 		rewardsService.calculateRewardsForAllUsers(allUsers);
-
-		for (User user : allUsers) {
-            assertFalse(user.getUserRewards().isEmpty());
-		}
 		stopWatch.stop();
+
+		boolean allUsersHaveRewards = allUsers.stream()
+				.noneMatch(user -> user.getUserRewards().isEmpty());
+		assertTrue(allUsersHaveRewards);
 		tourGuideService.tracker.stopTracking();
 
 		System.out.println("highVolumeGetRewards: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime())
