@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -59,9 +60,9 @@ public class TourGuideService {
 		return user.getUserRewards();
 	}
 
-	public VisitedLocation getUserLocation(User user) {
+	public VisitedLocation getUserLocation(User user) throws ExecutionException, InterruptedException {
         return (!user.getVisitedLocations().isEmpty()) ? user.getLastVisitedLocation()
-				: trackUserLocation(user);
+				: trackUserLocation(user).get();
 	}
 
 	public User getUser(String userName) {
@@ -94,22 +95,20 @@ public class TourGuideService {
 
 	public void trackAllUsersLocations(List<User> allUsers) {
 		List<CompletableFuture<VisitedLocation>> completableFutureList = allUsers.stream()
-				.map(user -> {
-                    return CompletableFuture.supplyAsync(() -> trackUserLocation(user), executorService);
-				})
-				.toList();
-
+				.map(this::trackUserLocation).toList();
 		completableFutureList.forEach(CompletableFuture::join);
 	}
 
-	public VisitedLocation trackUserLocation(User user) {
-		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
-		return visitedLocation;
+	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
+		return CompletableFuture.supplyAsync(()->{
+			VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+			user.addToVisitedLocations(visitedLocation);
+			rewardsService.calculateRewards(user);
+			return visitedLocation;
+		}, executorService);
 	}
 
-	public List<NearbyAttractionDTO> getNearByAttractions(String username) {
+	public List<NearbyAttractionDTO> getNearByAttractions(String username) throws ExecutionException, InterruptedException {
 		User currentUser = getUser(username);
 		getUserLocation(currentUser);
 		Location locationUser = currentUser.getLastVisitedLocation().location;

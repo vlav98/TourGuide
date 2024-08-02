@@ -46,7 +46,7 @@ public class RewardsService {
 
 	public void calculateRewardsForAllUsers(List<User> allUsers) {
 		List<CompletableFuture<Void>> listRewards = new ArrayList<>();
-		allUsers.parallelStream().forEach(u -> listRewards.add(calculateRewards(u)));
+		allUsers.forEach(u -> listRewards.add(calculateRewards(u)));
 		listRewards.parallelStream().forEach(CompletableFuture::join);
 	}
 
