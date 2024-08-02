@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -35,6 +37,7 @@ public class TourGuideService {
 	boolean testMode = true;
 	private final RewardCentral rewardCentral = new RewardCentral();
 	private final static int ATTRACTION_NUMBER_LIMIT = 5; // We limit the number of closest attractions to 5.
+	private final ExecutorService executorService = Executors.newFixedThreadPool(200);
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -91,12 +94,12 @@ public class TourGuideService {
 
 	public void trackAllUsersLocations(List<User> allUsers) {
 		List<CompletableFuture<VisitedLocation>> completableFutureList = allUsers.stream()
-				.map(user -> CompletableFuture.supplyAsync(() -> trackUserLocation(user)))
+				.map(user -> {
+                    return CompletableFuture.supplyAsync(() -> trackUserLocation(user), executorService);
+				})
 				.toList();
 
-		CompletableFuture
-				.allOf(completableFutureList.toArray(new CompletableFuture[0]))
-				.join();
+		completableFutureList.forEach(CompletableFuture::join);
 	}
 
 	public VisitedLocation trackUserLocation(User user) {
