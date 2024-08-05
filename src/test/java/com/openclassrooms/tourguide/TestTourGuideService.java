@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import gpsUtil.GpsUtil;
@@ -34,8 +34,8 @@ public class TestTourGuideService {
 	}
 
 	@Test
-	public void getUserLocation() {
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
+	public void getUserLocation() throws ExecutionException, InterruptedException {
+		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).get();
 		tourGuideService.tracker.stopTracking();
         assertEquals(visitedLocation.userId, user.getUserId());
 	}
@@ -72,8 +72,8 @@ public class TestTourGuideService {
 	}
 
 	@Test
-	public void trackUser() {
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
+	public void trackUser() throws ExecutionException, InterruptedException {
+		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).get();
 
 		tourGuideService.tracker.stopTracking();
 
@@ -81,7 +81,7 @@ public class TestTourGuideService {
 	}
 
 	@Test
-	public void getNearbyAttractions() {
+	public void getNearbyAttractions() throws ExecutionException, InterruptedException {
 		tourGuideService.addUser(user);
 		List<NearbyAttractionDTO> attractions = tourGuideService.getNearByAttractions(user.getUserName());
 

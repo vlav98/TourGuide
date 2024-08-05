@@ -9,6 +9,10 @@ import com.openclassrooms.tourguide.user.UserReward;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,6 +38,7 @@ public class TourGuideService {
 	boolean testMode = true;
 	private final RewardCentral rewardCentral = new RewardCentral();
 	private final static int ATTRACTION_NUMBER_LIMIT = 5; // We limit the number of closest attractions to 5.
+	private final ExecutorService executorService = Executors.newFixedThreadPool(200);
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -55,10 +60,9 @@ public class TourGuideService {
 		return user.getUserRewards();
 	}
 
-	public VisitedLocation getUserLocation(User user) {
-		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
-				: trackUserLocation(user);
-		return visitedLocation;
+	public VisitedLocation getUserLocation(User user) throws ExecutionException, InterruptedException {
+        return (!user.getVisitedLocations().isEmpty()) ? user.getLastVisitedLocation()
+				: trackUserLocation(user).get();
 	}
 
 	public User getUser(String userName) {
@@ -89,14 +93,22 @@ public class TourGuideService {
 		return providers;
 	}
 
-	public VisitedLocation trackUserLocation(User user) {
-		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
-		return visitedLocation;
+	public void trackAllUsersLocations(List<User> allUsers) {
+		List<CompletableFuture<VisitedLocation>> completableFutureList = allUsers.stream()
+				.map(this::trackUserLocation).toList();
+		completableFutureList.forEach(CompletableFuture::join);
 	}
 
-	public List<NearbyAttractionDTO> getNearByAttractions(String username) {
+	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
+		return CompletableFuture.supplyAsync(()->{
+			VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+			user.addToVisitedLocations(visitedLocation);
+			rewardsService.calculateRewards(user);
+			return visitedLocation;
+		}, executorService);
+	}
+
+	public List<NearbyAttractionDTO> getNearByAttractions(String username) throws ExecutionException, InterruptedException {
 		User currentUser = getUser(username);
 		getUserLocation(currentUser);
 		Location locationUser = currentUser.getLastVisitedLocation().location;
