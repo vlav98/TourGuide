@@ -38,3 +38,6 @@ jobs:
 
     - name: Run all tests
       run: mvn -f ./pom.xml verify -Dskip-tests-performance=false
+
+    - name: Package
+      run: mvn package
